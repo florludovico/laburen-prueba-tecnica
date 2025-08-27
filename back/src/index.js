@@ -12,16 +12,27 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
+    origin: ["https://agente-ventas-ia.onrender.com", "http://localhost:3000"],
+    methods: ["GET", "POST", "PATCH"],
+    credentials: true
   },
+  allowEIO3: true,
+  transports: ['polling', 'websocket'] 
 });
 
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+  origin: ["https://tu-frontend-url.onrender.com", "http://localhost:3000"],
+  methods: ["GET", "POST", "PATCH"],
+  credentials: true
+}));
 app.use(express.json());
-app.use(express.static("public"));
+
+
+app.get('/', (req, res) => {
+  res.json({ message: 'Servidor funcionando correctamente' });
+});
 
 app.use("/products", productsRouter);
 app.use("/carts", cartsRouter);
@@ -31,8 +42,13 @@ io.on("connection", (socket) => {
 
   socket.on("chat message", async (msg) => {
     console.log("Mensaje recibido:", msg);
-    const response = await runConversation(msg);
-    io.emit("chat message", response);
+    try {
+      const response = await runConversation(msg);
+      io.emit("chat message", response);
+    } catch (error) {
+      console.error("Error en runConversation:", error);
+      socket.emit("chat message", "Lo siento, hubo un error procesando tu mensaje.");
+    }
   });
 
   socket.on("disconnect", () => {
@@ -48,8 +64,8 @@ app.use((err, req, res, next) => {
     .json({ error: err.message || "Error interno del servidor" });
 });
 
-app.listen(PORT, () => {
-  console.log(`API escuchando en http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor y chat escuchando en el puerto ${PORT}`);
 });
 
 module.exports = app;
