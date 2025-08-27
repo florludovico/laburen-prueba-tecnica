@@ -48,10 +48,8 @@ app.use((err, req, res, next) => {
     .json({ error: err.message || "Error interno del servidor" });
 });
 
-if (process.env.NODE_ENV !== "production") {
-  server.listen(PORT, () => {
-    console.log(`Servidor y chat escuchando en http://localhost:${PORT}`);
-  });
-}
+app.listen(PORT, () => {
+  console.log(`API escuchando en http://localhost:${PORT}`);
+});
 
 module.exports = app;
