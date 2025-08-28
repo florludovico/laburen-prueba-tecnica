@@ -1,52 +1,101 @@
-<script>
-    const socket = io("https://laburen-agent-backend.onrender.com", {
-        transports: ['polling', 'websocket'],
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Agente de Ventas IA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      #messages li {
+        word-break: break-word;
+      }
+      #form {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <div class="flex flex-col h-screen max-w-2xl mx-auto bg-white shadow-lg">
+      <div class="bg-green-600 text-white p-4 text-center">
+        <h1 class="text-xl font-semibold">Agente de Ventas IA</h1>
+      </div>
+
+      <ul id="messages" class="flex-1 p-4 space-y-4 overflow-y-auto">
+        <li class="p-3 rounded-lg bg-blue-100 text-gray-800 max-w-xs">
+          Hola, ¿que puedo ayudarte a encontrar hoy?
+        </li>
+      </ul>
+
+      <form id="form" class="p-4 bg-gray-200" action="">
+        <input
+          id="input"
+          autocomplete="off"
+          class="border rounded-l-lg p-2 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Escribe tu mensaje..."
+        />
+        <button
+          class="bg-yellow-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700 font-semibold"
+        >
+          Enviar
+        </button>
+      </form>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+      const socket = io("https://laburen-agent-backend.onrender.com", {
+        transports: ["polling", "websocket"],
         upgrade: true,
         rememberUpgrade: false,
         timeout: 20000,
-        forceNew: true
-    });
+        forceNew: true,
+      });
 
-    const form = document.getElementById('form');
-    const input = document.getElementById('input');
-    const messages = document.getElementById('messages');
+      const form = document.getElementById("form");
+      const input = document.getElementById("input");
+      const messages = document.getElementById("messages");
 
+      socket.on("connect", function () {
+        console.log("Conectado al servidor");
+      });
 
-    socket.on('connect', function() {
-        console.log('Conectado al servidor');
-    });
+      socket.on("connect_error", function (error) {
+        console.error("Error de conexión:", error);
+      });
 
-    socket.on('connect_error', function(error) {
-        console.error('Error de conexión:', error);
-    });
+      socket.on("disconnect", function (reason) {
+        console.log("Desconectado:", reason);
+      });
 
-    socket.on('disconnect', function(reason) {
-        console.log('Desconectado:', reason);
-    });
-
-    form.addEventListener('submit', function(e) {
+      form.addEventListener("submit", function (e) {
         e.preventDefault();
         if (input.value && socket.connected) {
-            const userMessage = document.createElement('li');
-            userMessage.textContent = input.value;
-            userMessage.className = 'p-3 rounded-lg bg-gray-300 text-gray-800 max-w-xs self-end ml-auto';
-            messages.appendChild(userMessage);
-            
-            socket.emit('chat message', input.value);
-            input.value = '';
+          const userMessage = document.createElement("li");
+          userMessage.textContent = input.value;
+          userMessage.className =
+            "p-3 rounded-lg bg-gray-300 text-gray-800 max-w-xs self-end ml-auto";
+          messages.appendChild(userMessage);
 
-            messages.scrollTop = messages.scrollHeight;
+          socket.emit("chat message", input.value);
+          input.value = "";
+
+          messages.scrollTop = messages.scrollHeight;
         } else if (!socket.connected) {
-            console.log('Socket no conectado');
+          console.log("Socket no conectado");
         }
-    });
+      });
 
-    socket.on('chat message', function(msg) {
-        const agentMessage = document.createElement('li');
+      socket.on("chat message", function (msg) {
+        const agentMessage = document.createElement("li");
         agentMessage.textContent = msg;
-        agentMessage.className = 'p-3 rounded-lg bg-blue-100 text-gray-800 max-w-xs';
+        agentMessage.className =
+          "p-3 rounded-lg bg-blue-100 text-gray-800 max-w-xs";
         messages.appendChild(agentMessage);
-        
+
         messages.scrollTop = messages.scrollHeight;
-    });
-</script>
+      });
+    </script>
+  </body>
+</html>
