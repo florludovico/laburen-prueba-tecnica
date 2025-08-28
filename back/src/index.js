@@ -23,7 +23,7 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: ["https://tu-frontend-url.onrender.com", "http://localhost:3000"],
+  origin: ["https://agente-ventas-ia.onrender.com", "http://localhost:3000"],
   methods: ["GET", "POST", "PATCH"],
   credentials: true
 }));
@@ -44,7 +44,7 @@ io.on("connection", (socket) => {
     console.log("Mensaje recibido:", msg);
     try {
       const response = await runConversation(msg);
-      io.emit("chat message", response);
+      socket.emit("chat message", response);
     } catch (error) {
       console.error("Error en runConversation:", error);
       socket.emit("chat message", "Lo siento, hubo un error procesando tu mensaje.");
