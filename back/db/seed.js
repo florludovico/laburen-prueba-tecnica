@@ -22,7 +22,7 @@ const seedDatabase = async () => {
         console.log('Limpiando la tabla de productos...');
         await client.query('TRUNCATE TABLE products RESTART IDENTITY CASCADE');
 
-        const productsToInsert = results.slice(0, 10); 
+        const productsToInsert = results; 
         console.log(`Insertando ${productsToInsert.length} productos...`);
 
         for (const product of productsToInsert) {
