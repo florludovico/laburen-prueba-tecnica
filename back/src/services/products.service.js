@@ -10,30 +10,36 @@ const singularize = (str) => {
 };
 
 const findAllProducts = async (queryFilter) => {
-  let query;
-  const queryParams = [];
-
-  if (queryFilter && queryFilter.trim().length > 0) {
-    const normalizedQuery = removeAccents(queryFilter.toLowerCase());
-    const singularQuery = singularize(normalizedQuery);
-
-    query = `
-      SELECT id, name, description, price, stock
-      FROM products
-      WHERE lower(translate(name, 'áéíóúÁÉÍÓÚ', 'aeiouaeiou')) LIKE $1
-         OR lower(translate(description, 'áéíóúÁÉÍÓÚ', 'aeiouaeiou')) LIKE $1
-      ORDER BY id ASC
-      LIMIT 50;
-    `;
-    queryParams.push(`%${singularQuery}%`);
-  } else {
-    query = `
+  if (!queryFilter || queryFilter.trim().length === 0) {
+    const result = await pool.query(`
       SELECT id, name, description, price, stock
       FROM products
       ORDER BY id ASC
       LIMIT 50;
-    `;
+    `);
+    return result.rows;
   }
+
+  const normalizedQuery = removeAccents(queryFilter.toLowerCase());
+  const singularQuery = singularize(normalizedQuery);
+
+  const words = singularQuery.split(/\s+/);
+
+  const conditions = words.map((_, i) =>
+        `(lower(translate(name, 'áéíóúÁÉÍÓÚ','aeiouaeiou')) LIKE $${i + 1} OR
+      lower(translate(description, 'áéíóúÁÉÍÓÚ','aeiouaeiou')) LIKE $${i + 1})`
+    )
+    .join(" AND ");
+
+  const query = `
+    SELECT id, name, description, price, stock
+    FROM products
+    WHERE ${conditions}
+    ORDER BY id ASC
+    LIMIT 50;
+  `;
+
+  const queryParams = words.map((word) => `%${word}%`);
 
   const result = await pool.query(query, queryParams);
   return result.rows;
